@@ -10,6 +10,8 @@ A simple service odata service provider.
 
 `id_attribute` - the name of the property containing the id / _id value for an entity.
 
+`value_field` - the name of the field containing the values, default value: value.
+
 
 ### Example system config:
 

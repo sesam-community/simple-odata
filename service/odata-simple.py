@@ -10,6 +10,7 @@ logger = logger.Logger('odata-simple')
 
 url = os.environ.get("base_url")
 id_attribute = os.environ.get("id_attribute")
+value_field = os.environ.get("value_field", "value")
 
 
 def stream_odata_json(odata):
@@ -18,7 +19,7 @@ def stream_odata_json(odata):
     yield '['
     data = json.loads(odata)
 
-    for value in data['value']:
+    for value in data[value_field]:
         if not first:
             yield ','
         else:
@@ -39,7 +40,6 @@ def get(path):
 
     try:
         request_data = requests.get(request_url).text
-        logger.info("Data received: %s", request_data)
     except Exception as e:
         logger.warning("Exception occurred when download data from '%s': '%s'", request_url, e)
         raise
