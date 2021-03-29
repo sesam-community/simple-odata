@@ -39,6 +39,7 @@ def get(path):
 
     try:
         request_data = requests.get(request_url).text
+        logger.info("Data received: %s", request_data)
     except Exception as e:
         logger.warning("Exception occurred when download data from '%s': '%s'", request_url, e)
         raise
