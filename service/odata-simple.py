@@ -25,7 +25,7 @@ def stream_odata_json(odata):
         else:
             first = False
 
-        value['_id'] = value[id_attribute]
+        # value['_id'] = value[id_attribute]
 
         yield json.dumps(value)
 

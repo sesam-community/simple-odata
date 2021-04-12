@@ -8,8 +8,6 @@ A simple service odata service provider.
 
 `base_url` - the base url of the odata API service.
 
-`id_attribute` - the name of the property containing the id / _id value for an entity.
-
 `value_field` - the name of the field containing the values, default value: value.
 
 
@@ -21,8 +19,7 @@ A simple service odata service provider.
   "type": "system:microservice",
   "docker": {
     "environment": {
-      "base_url": "https://base.url.to.odata.service/",
-      "id_attribute": "ID"
+      "base_url": "https://base.url.to.odata.service/"
     },
     "image": "sesamcommunity/simple-odata:1.0",
     "port": 5001
