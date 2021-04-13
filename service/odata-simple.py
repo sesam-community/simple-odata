@@ -17,11 +17,7 @@ def stream_odata_json(odata):
     """fetch entities from given Odata url and dumps back to client as JSON stream"""
     first = True
     yield '['
-    try:
-        data = json.loads(odata)
-    except Exception as e:
-        logger.warning("Exception occurred when parsing json: '%s'", odata)
-        raise
+    data = json.loads(odata)
 
     for value in data[value_field]:
         if not first:
@@ -44,6 +40,7 @@ def get(path):
 
     try:
         request_data = requests.get(request_url).text
+        logger.info("Temp logging: %s", request_data)
     except Exception as e:
         logger.warning("Exception occurred when download data from '%s': '%s'", request_url, e)
         raise
