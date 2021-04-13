@@ -11,6 +11,7 @@ logger = logger.Logger('odata-simple')
 url = os.environ.get("base_url")
 id_attribute = os.environ.get("id_attribute")
 value_field = os.environ.get("value_field", "value")
+log_response_data = os.environ.get("log_response_data", "false").lower() == "true"
 
 
 def stream_odata_json(odata):
@@ -40,7 +41,8 @@ def get(path):
 
     try:
         request_data = requests.get(request_url).text
-        logger.info("Temp logging: %s", request_data)
+        if log_response_data:
+            logger.info("Data received: %s", request_data)
     except Exception as e:
         logger.warning("Exception occurred when download data from '%s': '%s'", request_url, e)
         raise
