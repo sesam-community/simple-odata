@@ -9,7 +9,6 @@ app = Flask(__name__)
 logger = logger.Logger('odata-simple')
 
 url = os.environ.get("base_url")
-id_attribute = os.environ.get("id_attribute")
 value_field = os.environ.get("value_field", "value")
 log_response_data = os.environ.get("log_response_data", "false").lower() == "true"
 
@@ -25,8 +24,6 @@ def stream_odata_json(odata):
             yield ','
         else:
             first = False
-
-        # value['_id'] = value[id_attribute]
 
         yield json.dumps(value)
 
