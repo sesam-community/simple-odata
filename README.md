@@ -10,7 +10,7 @@ A simple service odata service provider.
 
 `value_field` - the name of the field containing the values, default value: value.
 
-`log_response_data` - set this value to true to log the received data, default value: false.
+`log_response_data` - set this value to true to log the received data for debugging purposes, default value: false.
 
 
 ### Example system config:
