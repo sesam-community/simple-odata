@@ -12,6 +12,8 @@ A simple service odata service provider.
 
 `log_response_data` - set this value to true to log the received data for debugging purposes, default value: false.
 
+`stream_data` - stream respone data, default value: false.
+
 
 ### Example system config:
 
