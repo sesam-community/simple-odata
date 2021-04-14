@@ -12,6 +12,21 @@ url = os.environ.get("base_url")
 value_field = os.environ.get("value_field", "value")
 log_response_data = os.environ.get("log_response_data", "false").lower() == "true"
 stream_data = os.environ.get("stream_data", "true").lower() == "true"
+headers = json.loads('{"Content-Type": "application/json"}')
+
+
+class BasicUrlSystem:
+    def __init__(self, config):
+        self._config = config
+
+    def make_session(self):
+        session = requests.Session()
+        session.headers = self._config["headers"]
+        session.verify = True
+        return session
+
+
+session_factory = BasicUrlSystem({"headers": headers})
 
 
 def stream_odata_json(odata):
@@ -38,9 +53,11 @@ def get(path):
     logger.info("Request url: %s", request_url)
 
     try:
-        request_data = requests.get(request_url)
-        if log_response_data:
-            logger.info("Data received: %s", request_data.text)
+        with session_factory.make_session() as s:
+            request_data = s.request("GET", request_url, headers=headers)
+#            request_data = requests.get(request_url)
+            if log_response_data:
+                logger.info("Data received: %s", request_data.text)
     except Exception as e:
         logger.warning("Exception occurred when download data from '%s': '%s'", request_url, e)
         raise
