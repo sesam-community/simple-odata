@@ -1,6 +1,6 @@
 import json
 import requests
-from flask import Flask, Response
+from flask import Flask, Response, request
 import os
 import logger
 import cherrypy
@@ -49,13 +49,15 @@ def stream_odata_json(odata):
 @app.route("/<path:path>", methods=["GET"])
 def get(path):
     request_url = "{0}{1}".format(url, path)
+    if request.query_string:
+        request_url = "{0}?{1}".format(request_url, request.query_string.decode("utf-8"))
 
     logger.info("Request url: %s", request_url)
 
     try:
         with session_factory.make_session() as s:
             request_data = s.request("GET", request_url, headers=headers)
-#            request_data = requests.get(request_url)
+
             if log_response_data:
                 logger.info("Data received: %s", request_data.text)
     except Exception as e:
