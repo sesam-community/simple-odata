@@ -1,4 +1,4 @@
-import json
+import ujson
 import requests
 from flask import Flask, Response, request
 import os
@@ -12,7 +12,7 @@ url = os.environ.get("base_url")
 value_field = os.environ.get("value_field", "value")
 log_response_data = os.environ.get("log_response_data", "false").lower() == "true"
 stream_data = os.environ.get("stream_data", "true").lower() == "true"
-headers = json.loads('{"Content-Type": "application/json"}')
+headers = ujson.loads('{"Content-Type": "application/json"}')
 
 
 class BasicUrlSystem:
@@ -33,7 +33,7 @@ def stream_odata_json(odata):
     """fetch entities from given Odata url and dumps back to client as JSON stream"""
     first = True
     yield '['
-    data = json.loads(odata)
+    data = ujson.loads(odata)
 
     for value in data[value_field]:
         if not first:
@@ -41,7 +41,7 @@ def stream_odata_json(odata):
         else:
             first = False
 
-        yield json.dumps(value)
+        yield ujson.dumps(value)
 
     yield ']'
 
