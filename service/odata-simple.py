@@ -34,9 +34,9 @@ session_factory = BasicUrlSystem({"headers": headers})
 
 class DataAccess:
 
-    def __get_all_paged_entities(self, path, query_string):
+    def __get_all_paged_entities(self, base_url, path, query_string):
         logger.info(f"Fetching data from paged url: {path}")
-        request_url = "{0}{1}".format(url, path)
+        request_url = "{0}{1}".format(base_url, path)
         if query_string:
             request_url = "{0}?{1}&$top={2}&$count=true".format(request_url, query_string.decode("utf-8"), page_size)
         else:
@@ -50,7 +50,7 @@ class DataAccess:
             logger.info(f"Fetching data from url: {next_page}")
 
             with session_factory.make_session() as s:
-                request_data = s.request("GET", request_url, headers=headers)
+                request_data = s.request("GET", next_page, headers=headers)
 
             if not request_data.ok:
                 error_text = f"Unexpected response status code: {request_data.status_code} with response text {request_data.text}"
@@ -68,12 +68,12 @@ class DataAccess:
                 count = result_json["@odata.count"]
             page_count += 1
 
-            next_page = get_next_url(url, count, entity_count, query_string)
+            next_page = get_next_url(base_url, count, entity_count, query_string)
 
         logger.info(f"Returning {entity_count} entities from {page_count} pages")
 
-    def get_paged_entities(self, path, query_string):
-        return self.__get_all_paged_entities(path, query_string)
+    def get_paged_entities(self, base_url, path, query_string):
+        return self.__get_all_paged_entities(base_url, path, query_string)
 
 
 data_access_layer = DataAccess()
@@ -83,12 +83,10 @@ def get_next_url(base_url, count, entities_fetched, query_string):
     if entities_fetched >= count:
         return None
 
-    request_url = base_url
-
     if query_string:
-        request_url = "{0}?{1}&$top={2}&$skip={3}".format(request_url, query_string.decode("utf-8"), page_size, entities_fetched+1)
+        request_url = "{0}?{1}&$top={2}&$skip={3}".format(base_url, query_string.decode("utf-8"), page_size, entities_fetched+1)
     else:
-        request_url = "{0}?$top={1}&$skip={2}".format(request_url, page_size, entities_fetched+1)
+        request_url = "{0}?$top={1}&$skip={2}".format(base_url, page_size, entities_fetched+1)
 
     return request_url
 
@@ -129,10 +127,10 @@ def get(path):
     if request.query_string:
         request_url = "{0}?{1}".format(request_url, request.query_string.decode("utf-8"))
 
-    logger.info("Request url: %s", request_url)
+    logger.info("Requested url: %s", request_url)
 
     try:
-        entities = data_access_layer.get_paged_entities(path, request.query_string)
+        entities = data_access_layer.get_paged_entities(url, path, request.query_string)
     except Exception as e:
         logger.warning("Exception occurred when download data from '%s': '%s'", request_url, e)
         raise
