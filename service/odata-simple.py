@@ -4,12 +4,15 @@ from flask import Flask, Response, request
 import os
 import logger
 import cherrypy
+from sesamutils import Dotdictify
+
 
 app = Flask(__name__)
 logger = logger.Logger('odata-simple')
 
 url = os.environ.get("base_url")
 value_field = os.environ.get("value_field", "value")
+page_size = os.environ.get("page_size", 1000)
 log_response_data = os.environ.get("log_response_data", "false").lower() == "true"
 stream_data = os.environ.get("stream_data", "true").lower() == "true"
 headers = ujson.loads('{"Content-Type": "application/json"}')
@@ -29,20 +32,94 @@ class BasicUrlSystem:
 session_factory = BasicUrlSystem({"headers": headers})
 
 
-def stream_odata_json(odata):
-    """fetch entities from given Odata url and dumps back to client as JSON stream"""
+class DataAccess:
+
+    def __get_all_paged_entities(self, path, query_string):
+        logger.info(f"Fetching data from paged url: {path}")
+        request_url = "{0}{1}".format(url, path)
+        if query_string:
+            request_url = "{0}?{1}&$count=true".format(request_url, query_string.decode("utf-8"))
+        else:
+            request_url = "{0}?$count=true".format(request_url)
+
+        next_page = request_url
+        entity_count = 0
+        page_count = 0
+        count = None
+        while next_page is not None:
+            logger.info(f"Fetching data from url: {next_page}")
+
+            with session_factory.make_session() as s:
+                request_data = s.request("GET", request_url, headers=headers)
+
+            if not request_data.ok:
+                error_text = f"Unexpected response status code: {request_data.status_code} with response text {request_data.text}"
+                logger.error(error_text)
+                raise AssertionError(error_text)
+
+            result_json = Dotdictify(request_data.json())
+            entities = result_json.get(value_field)
+            for entity in entities:
+                if entity is not None:
+                    yield (entity)
+
+            entity_count += len(entities)
+            if count is None:
+                count = result_json["@odata.count"]
+            page_count += 1
+
+            next_page = get_next_url(url, count, entity_count, query_string)
+
+        logger.info(f"Returning {entity_count} entities from {page_count} pages")
+
+    def get_paged_entities(self, path, query_string):
+        return self.__get_all_paged_entities(path, query_string)
+
+
+data_access_layer = DataAccess()
+
+
+def get_next_url(base_url, count, entities_fetched, query_string):
+    if entities_fetched >= count:
+        return None
+
+    request_url = base_url
+
+    if query_string:
+        request_url = "{0}?{1}&$top={2}&$skip={3}".format(request_url, query_string.decode("utf-8"), page_size, entities_fetched+1)
+    else:
+        request_url = "{0}?$top={1}&$skip={2}".format(request_url, page_size, entities_fetched+1)
+
+    return request_url
+
+
+def call_url(base_url, url_parameters, page):
+    request_url = base_url
+    first = True
+    for k, v in url_parameters.items():
+        if first:
+            if k == os.environ.get('startpage'):
+                request_url += '?' + k + '=' + page
+            else:
+                request_url += '?' + k + '=' + v
+        else:
+            if k == os.environ.get('startpage'):
+                request_url += '&' + k + '=' + page
+            else:
+                request_url += '&' + k + '=' + v
+        first = False
+    return request_url
+
+
+def stream_json(entities):
     first = True
     yield '['
-    data = ujson.loads(odata)
-
-    for value in data[value_field]:
+    for i, row in enumerate(entities):
         if not first:
             yield ','
         else:
             first = False
-
-        yield ujson.dumps(value)
-
+        yield ujson.dumps(row)
     yield ']'
 
 
@@ -55,19 +132,12 @@ def get(path):
     logger.info("Request url: %s", request_url)
 
     try:
-        with session_factory.make_session() as s:
-            request_data = s.request("GET", request_url, headers=headers)
-
-            if log_response_data:
-                logger.info("Data received: %s", request_data.text)
+        entities = data_access_layer.get_paged_entities(path, request.query_string)
     except Exception as e:
         logger.warning("Exception occurred when download data from '%s': '%s'", request_url, e)
         raise
 
-    if stream_data:
-        return Response(stream_odata_json(request_data.text), mimetype='application/json')
-
-    return Response(request_data, mimetype='application/json')
+    return Response(stream_json(entities), mimetype='application/json')
 
 
 if __name__ == '__main__':
