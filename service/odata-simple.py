@@ -38,9 +38,9 @@ class DataAccess:
         logger.info(f"Fetching data from paged url: {path}")
         request_url = "{0}{1}".format(url, path)
         if query_string:
-            request_url = "{0}?{1}&$count=true".format(request_url, query_string.decode("utf-8"))
+            request_url = "{0}?{1}&$top={2}&$count=true".format(request_url, query_string.decode("utf-8"), page_size)
         else:
-            request_url = "{0}?$count=true".format(request_url)
+            request_url = "{0}?$top={1}&$count=true".format(request_url, page_size)
 
         next_page = request_url
         entity_count = 0
