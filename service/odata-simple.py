@@ -13,6 +13,7 @@ logger = logger.Logger('odata-simple')
 url = os.environ.get("base_url")
 value_field = os.environ.get("value_field", "value")
 page_size = os.environ.get("page_size", 1000)
+start_offset = os.environ.get("start_offset", 0)
 log_response_data = os.environ.get("log_response_data", "false").lower() == "true"
 stream_data = os.environ.get("stream_data", "true").lower() == "true"
 headers = ujson.loads('{"Content-Type": "application/json"}')
@@ -38,14 +39,15 @@ class DataAccess:
         logger.info(f"Fetching data from paged url: {path}")
         request_url = "{0}{1}".format(base_url, path)
         if query_string:
-            next_page = "{0}?{1}&$top={2}&$count=true".format(request_url, query_string.decode("utf-8"), page_size)
+            next_page = "{0}?{1}&$top={2}&$skip={3}&$count=true".format(request_url, query_string.decode("utf-8"), page_size, start_offset)
         else:
-            next_page = "{0}?$top={1}&$count=true".format(request_url, page_size)
+            next_page = "{0}?$top={1}&&$skip={2}$count=true".format(request_url, page_size, start_offset)
 
         entity_count = 0
         page_count = 0
         count = None
-        while next_page is not None:
+        previous_page = None
+        while next_page is not None and next_page != previous_page:
             logger.info(f"Fetching data from url: {next_page}")
 
             with session_factory.make_session() as s:
@@ -65,8 +67,12 @@ class DataAccess:
             entity_count += len(entities)
             if count is None:
                 count = result_json["@odata.count"]
+                logger.info(f"Total number of entities in source: {count}")
             page_count += 1
 
+            logger.info(f"Fetched {len(entities)} entities, total: {entity_count}")
+
+            previous_page = next_page
             next_page = get_next_url(request_url, count, entity_count, query_string)
 
         logger.info(f"Returning {entity_count} entities from {page_count} pages")
