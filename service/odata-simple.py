@@ -45,7 +45,7 @@ class DataAccess:
         else:
             next_page = "{0}?$top={1}{2}".format(request_url, page_size, use_count_parameter)
 
-        entity_count = 25000
+        entity_count = 27000
         page_count = 0
         count = None
         previous_page = None
