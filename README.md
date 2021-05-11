@@ -10,9 +10,9 @@ A simple service odata service provider.
 
 `value_field` - the name of the field containing the values, default value: value.
 
-`log_response_data` - set this value to true to log the received data for debugging purposes, default value: false.
+`page_size` - the number of entities fetched pr. page, default value: 1000.
 
-`stream_data` - stream response data, default value: true.
+`use_count_for_paging` - use the count returned from the Odata service as limit for pagination, this will make it slower, default value: false.
 
 
 ### Example system config:
