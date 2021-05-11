@@ -93,7 +93,7 @@ data_access_layer = DataAccess()
 
 
 def get_next_url(base_url, count, entities_fetched, query_string):
-    if entities_fetched >= count:
+    if entities_fetched >= count and use_count:
         return None
 
     if query_string:
