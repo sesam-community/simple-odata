@@ -13,9 +13,7 @@ logger = logger.Logger('odata-simple')
 url = os.environ.get("base_url")
 value_field = os.environ.get("value_field", "value")
 page_size = os.environ.get("page_size", 1000)
-use_count = os.environ.get("use_count_for_paging", False)
-log_response_data = os.environ.get("log_response_data", "false").lower() == "true"
-stream_data = os.environ.get("stream_data", "true").lower() == "true"
+use_count = os.environ.get("use_count_for_paging", "false").lower() == "true"
 headers = ujson.loads('{"Content-Type": "application/json"}')
 
 
@@ -47,7 +45,7 @@ class DataAccess:
         else:
             next_page = "{0}?$top={1}{2}".format(request_url, page_size, use_count_parameter)
 
-        entity_count = 0
+        entity_count = 25000
         page_count = 0
         count = None
         previous_page = None
