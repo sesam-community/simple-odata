@@ -69,7 +69,7 @@ class DataAccess:
                     yield (entity)
 
             entity_count += len(entities)
-            if count is None:
+            if count is None and use_count:
                 count = result_json["@odata.count"]
                 logger.info(f"Total number of entities in source: {count}")
             page_count += 1
