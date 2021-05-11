@@ -13,6 +13,7 @@ logger = logger.Logger('odata-simple')
 url = os.environ.get("base_url")
 value_field = os.environ.get("value_field", "value")
 page_size = os.environ.get("page_size", 1000)
+use_count = os.environ.get("use_count_for_paging", False)
 log_response_data = os.environ.get("log_response_data", "false").lower() == "true"
 stream_data = os.environ.get("stream_data", "true").lower() == "true"
 headers = ujson.loads('{"Content-Type": "application/json"}')
@@ -37,10 +38,14 @@ class DataAccess:
     def __get_all_paged_entities(self, base_url, path, query_string):
         logger.info(f"Fetching data from paged url: {path}")
         request_url = "{0}{1}".format(base_url, path)
+        use_count_parameter = ""
+        if use_count:
+            use_count_parameter = "&$count=true"
+
         if query_string:
-            next_page = "{0}?{1}&$top={2}&$count=true".format(request_url, query_string.decode("utf-8"), page_size)
+            next_page = "{0}?{1}&$top={2}{3}".format(request_url, query_string.decode("utf-8"), page_size, use_count_parameter)
         else:
-            next_page = "{0}?$top={1}&$count=true".format(request_url, page_size)
+            next_page = "{0}?$top={1}{2}".format(request_url, page_size, use_count_parameter)
 
         entity_count = 0
         page_count = 0
@@ -72,7 +77,11 @@ class DataAccess:
             logger.info(f"Fetched {len(entities)} entities, total: {entity_count}")
 
             previous_page = next_page
-            next_page = get_next_url(request_url, count, entity_count, query_string)
+
+            if len(entities) == 0:
+                next_page = None
+            else:
+                next_page = get_next_url(request_url, count, entity_count, query_string)
 
         logger.info(f"Returning {entity_count} entities from {page_count} pages")
 
