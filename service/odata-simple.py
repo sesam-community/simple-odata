@@ -41,14 +41,13 @@ class DataAccess:
         request_url = "{0}{1}".format(base_url, path)
 
         if query_string:
-            next_page = "{0}?{1}&{2}={3}{4}".format(request_url, query_string.decode("utf-8"),
-                                                    page_size_parameter, page_size, use_count_parameter)
+            next_page = "{0}?{1}&{2}={3}".format(request_url, query_string.decode("utf-8"), page_size_parameter,
+                                                 page_size)
         else:
-            next_page = "{0}?{1}={2}{3}".format(request_url, page_size_parameter, page_size, use_count_parameter)
+            next_page = "{0}?{1}={2}".format(request_url, page_size_parameter, page_size)
 
         entity_count = starting_offset
         page_count = 0
-        count = None
         previous_page = None
         while next_page is not None and next_page != previous_page:
             logger.info(f"Fetching data from url: {next_page}")
@@ -57,7 +56,8 @@ class DataAccess:
                 request_data = s.request("GET", next_page, headers=headers)
 
             if not request_data.ok:
-                error_text = f"Unexpected response status code: {request_data.status_code} with response text {request_data.text}"
+                error_text = f"Unexpected response status code: {request_data.status_code} with response text " \
+                    f"{request_data.text}"
                 logger.error(error_text)
                 raise AssertionError(error_text)
 
@@ -77,7 +77,7 @@ class DataAccess:
             if len(entities) == 0:
                 next_page = None
             else:
-                next_page = get_next_url(request_url, count, entity_count, query_string)
+                next_page = get_next_url(request_url, entity_count, query_string)
 
         logger.info(f"Returning {entity_count} entities from {page_count} pages")
 
@@ -88,7 +88,7 @@ class DataAccess:
 data_access_layer = DataAccess()
 
 
-def get_next_url(base_url, count, entities_fetched, query_string):
+def get_next_url(base_url, entities_fetched, query_string):
     if query_string:
         request_url = "{0}?{1}&{2}={3}&4}={5}".format(base_url, query_string.decode("utf-8"), page_size_parameter,
                                                       page_size, page_parameter, entities_fetched)
