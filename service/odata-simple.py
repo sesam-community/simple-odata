@@ -16,6 +16,9 @@ page_size = int(os.environ.get("page_size", 1000))
 use_count = os.environ.get("use_count_for_paging", "false").lower() == "true"
 headers = ujson.loads('{"Content-Type": "application/json"}')
 starting_offset = int(os.environ.get("debug_starting_offset", 0))
+page_size_parameter = os.environ.get("page_size_parameter")
+page_parameter = os.environ.get("page_parameter")
+
 
 class BasicUrlSystem:
     def __init__(self, config):
@@ -36,14 +39,12 @@ class DataAccess:
     def __get_all_paged_entities(self, base_url, path, query_string):
         logger.info(f"Fetching data from paged url: {path}")
         request_url = "{0}{1}".format(base_url, path)
-        use_count_parameter = ""
-        if use_count:
-            use_count_parameter = "&$count=true"
 
         if query_string:
-            next_page = "{0}?{1}&$top={2}{3}".format(request_url, query_string.decode("utf-8"), page_size, use_count_parameter)
+            next_page = "{0}?{1}&{2}={3}{4}".format(request_url, query_string.decode("utf-8"),
+                                                    page_size_parameter, page_size, use_count_parameter)
         else:
-            next_page = "{0}?$top={1}{2}".format(request_url, page_size, use_count_parameter)
+            next_page = "{0}?{1}={2}{3}".format(request_url, page_size_parameter, page_size, use_count_parameter)
 
         entity_count = starting_offset
         page_count = 0
@@ -67,9 +68,6 @@ class DataAccess:
                     yield (entity)
 
             entity_count += len(entities)
-            if count is None and use_count:
-                count = result_json["@odata.count"]
-                logger.info(f"Total number of entities in source: {count}")
             page_count += 1
 
             logger.info(f"Fetched {len(entities)} entities, total: {entity_count}")
@@ -91,13 +89,12 @@ data_access_layer = DataAccess()
 
 
 def get_next_url(base_url, count, entities_fetched, query_string):
-    if use_count and entities_fetched >= count:
-        return None
-
     if query_string:
-        request_url = "{0}?{1}&$top={2}&$skip={3}".format(base_url, query_string.decode("utf-8"), page_size, entities_fetched)
+        request_url = "{0}?{1}&{2}={3}&4}={5}".format(base_url, query_string.decode("utf-8"), page_size_parameter,
+                                                      page_size, page_parameter, entities_fetched)
     else:
-        request_url = "{0}?$top={1}&$skip={2}".format(base_url, page_size, entities_fetched)
+        request_url = "{0}?{1}={2}&{3}={4}".format(base_url, page_size_parameter, page_size,
+                                                   page_parameter, entities_fetched)
 
     return request_url
 
