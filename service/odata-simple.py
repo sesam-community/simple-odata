@@ -43,7 +43,8 @@ class DataAccess:
         if query_string:
             next_page = "{0}?{1}&$top={2}{3}".format(request_url, query_string.decode("utf-8"), page_size, use_count_parameter)
         else:
-            next_page = "{0}?$top={1}{2}".format(request_url, page_size, use_count_parameter)
+            next_page = "{0}?$top=476&$skip=28000".format(request_url, page_size, use_count_parameter)
+            #next_page = "{0}?$top={1}{2}".format(request_url, page_size, use_count_parameter)
 
         entity_count = 0
         page_count = 0
