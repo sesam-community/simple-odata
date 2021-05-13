@@ -81,7 +81,7 @@ class DataAccess:
 
             previous_page = next_page
 
-            if len(entities) == 0:
+            if len(entities) == 0 or len(entities) <= page_size:
                 next_page = None
             else:
                 next_page = get_next_url(request_url, entity_count, query_string, page_count)
