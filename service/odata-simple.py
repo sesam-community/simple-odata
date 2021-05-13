@@ -101,7 +101,7 @@ def get_next_url(base_url, entity_count, query_string, page_count):
             next_count = page_count
 
     if query_string:
-        request_url = "{0}?{1}&{2}={3}&4}={5}".format(base_url, query_string, page_size_parameter,
+        request_url = "{0}?{1}&{2}={3}&{4}={5}".format(base_url, query_string, page_size_parameter,
                                                       page_size, page_parameter, next_count)
     else:
         request_url = "{0}?{1}={2}&{3}={4}".format(base_url, page_size_parameter, page_size,
