@@ -36,11 +36,6 @@ session_factory = BasicUrlSystem({"headers": headers})
 
 class DataAccess:
 
-    def get_value_field(d, event):
-        for key in d.keys():
-            if re.match(key, event):
-                yield d[key]
-
     def __get_all_paged_entities(self, base_url, path, query_string, key):
         logger.info(f"Fetching data from paged url: {path}")
         request_url = "{0}{1}".format(base_url, path)
