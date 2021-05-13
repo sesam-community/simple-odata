@@ -13,11 +13,11 @@ logger = logger.Logger('odata-simple')
 url = os.environ.get("base_url")
 value_field = os.environ.get("value_field", "value")
 page_size = int(os.environ.get("page_size", 1000))
-use_count = os.environ.get("use_count_for_paging", "false").lower() == "true"
-headers = ujson.loads('{"Content-Type": "application/json"}')
-starting_offset = int(os.environ.get("debug_starting_offset", 0))
 page_size_parameter = os.environ.get("page_size_parameter")
 page_parameter = os.environ.get("page_parameter")
+use_page_as_counter = os.environ.get("use_page_as_counter", "false") == "true"
+headers = ujson.loads('{"Content-Type": "application/json"}')
+starting_offset = int(os.environ.get("debug_starting_offset", 0))
 
 
 class BasicUrlSystem:
@@ -36,16 +36,23 @@ session_factory = BasicUrlSystem({"headers": headers})
 
 class DataAccess:
 
-    def __get_all_paged_entities(self, base_url, path, query_string):
+    def get_value_field(d, event):
+        for key in d.keys():
+            if re.match(key, event):
+                yield d[key]
+
+    def __get_all_paged_entities(self, base_url, path, query_string, key):
         logger.info(f"Fetching data from paged url: {path}")
         request_url = "{0}{1}".format(base_url, path)
 
         if query_string:
-            next_page = "{0}?{1}&{2}={3}".format(request_url, query_string.decode("utf-8"), page_size_parameter,
+            next_page = "{0}?{1}&{2}={3}".format(request_url, query_string, page_size_parameter,
                                                  page_size)
         else:
             next_page = "{0}?{1}={2}".format(request_url, page_size_parameter, page_size)
 
+        if key is None:
+            key = value_field
         entity_count = starting_offset
         page_count = 0
         previous_page = None
@@ -62,7 +69,7 @@ class DataAccess:
                 raise AssertionError(error_text)
 
             result_json = Dotdictify(request_data.json())
-            entities = result_json.get(value_field)
+            entities = result_json.get(key)
             for entity in entities:
                 if entity is not None:
                     yield (entity)
@@ -77,24 +84,28 @@ class DataAccess:
             if len(entities) == 0:
                 next_page = None
             else:
-                next_page = get_next_url(request_url, entity_count, query_string)
+                next_page = get_next_url(request_url, entity_count, query_string, page_count)
 
         logger.info(f"Returning {entity_count} entities from {page_count} pages")
 
-    def get_paged_entities(self, base_url, path, query_string):
-        return self.__get_all_paged_entities(base_url, path, query_string)
+    def get_paged_entities(self, base_url, path, query_string, key):
+        return self.__get_all_paged_entities(base_url, path, query_string, key)
 
 
 data_access_layer = DataAccess()
 
 
-def get_next_url(base_url, entities_fetched, query_string):
+def get_next_url(base_url, entity_count, query_string, page_count):
+    next_count = entity_count
+    if use_page_as_counter:
+            next_count = page_count
+
     if query_string:
-        request_url = "{0}?{1}&{2}={3}&4}={5}".format(base_url, query_string.decode("utf-8"), page_size_parameter,
-                                                      page_size, page_parameter, entities_fetched)
+        request_url = "{0}?{1}&{2}={3}&4}={5}".format(base_url, query_string, page_size_parameter,
+                                                      page_size, page_parameter, next_count)
     else:
         request_url = "{0}?{1}={2}&{3}={4}".format(base_url, page_size_parameter, page_size,
-                                                   page_parameter, entities_fetched)
+                                                   page_parameter, next_count)
 
     return request_url
 
@@ -132,13 +143,24 @@ def stream_json(entities):
 @app.route("/<path:path>", methods=["GET"])
 def get(path):
     request_url = "{0}{1}".format(url, path)
+    query_string = None
+    key = None
     if request.query_string:
-        request_url = "{0}?{1}".format(request_url, request.query_string.decode("utf-8"))
+        query_string = request.query_string.decode("utf-8")
+        request_url = "{0}?{1}".format(request_url, query_string)
+        if request.args.get("_key") is not None:
+            key = request.args["_key"]
+            query_string = ""
+            for query_string_key in request.args:
+                if query_string_key != "_key":
+                    if query_string != "":
+                        query_string += "&"
+                    query_string += f"{query_string_key}={request.args[query_string_key]}"
 
     logger.info("Requested url: %s", request_url)
 
     try:
-        entities = data_access_layer.get_paged_entities(url, path, request.query_string)
+        entities = data_access_layer.get_paged_entities(url, path, query_string, key)
     except Exception as e:
         logger.warning("Exception occurred when download data from '%s': '%s'", request_url, e)
         raise

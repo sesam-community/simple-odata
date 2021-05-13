@@ -12,8 +12,15 @@ A simple service odata service provider.
 
 `page_size` - the number of entities fetched pr. page, default value: 1000.
 
-`use_count_for_paging` - use the count returned from the Odata service as limit for pagination, this will make it slower, default value: false.
+`page_size_parameter` - name of the parameter that sets the number of entities returned pr page.
 
+`page_parameter` - name of the parameter that sets which page to return.
+
+`use_page_as_counter` - when set to true, the service will send the number of the page as the value to the page_parameter. When set to false, the service will send the current count of fetched entities to the page_parameter. Default value: false.
+
+### Querystring restricted parameters:
+
+`_key` - can be used to override the value of the 'value_field' parameters. This is useful for services where the entities returned resides in a property that is not constant in the API.
 
 ### Example system config:
 
