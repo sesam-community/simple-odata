@@ -81,7 +81,7 @@ class DataAccess:
 
             previous_page = next_page
 
-            if len(entities) == 0 or len(entities) <= page_size:
+            if len(entities) == 0 or len(entities) < page_size:
                 next_page = None
             else:
                 next_page = get_next_url(request_url, entity_count, query_string, page_count)
@@ -107,24 +107,6 @@ def get_next_url(base_url, entity_count, query_string, page_count):
         request_url = "{0}?{1}={2}&{3}={4}".format(base_url, page_size_parameter, page_size,
                                                    page_parameter, next_count)
 
-    return request_url
-
-
-def call_url(base_url, url_parameters, page):
-    request_url = base_url
-    first = True
-    for k, v in url_parameters.items():
-        if first:
-            if k == os.environ.get('startpage'):
-                request_url += '?' + k + '=' + page
-            else:
-                request_url += '?' + k + '=' + v
-        else:
-            if k == os.environ.get('startpage'):
-                request_url += '&' + k + '=' + page
-            else:
-                request_url += '&' + k + '=' + v
-        first = False
     return request_url
 
 
