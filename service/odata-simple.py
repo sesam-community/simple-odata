@@ -16,6 +16,7 @@ page_size = int(os.environ.get("page_size", 1000))
 page_size_parameter = os.environ.get("page_size_parameter")
 page_parameter = os.environ.get("page_parameter")
 use_page_as_counter = os.environ.get("use_page_as_counter", "false") == "true"
+use_paging = os.environ.get("use_page_as_counter", "true") == "true"
 headers = ujson.loads('{"Content-Type": "application/json"}')
 starting_offset = int(os.environ.get("debug_starting_offset", 0))
 
@@ -83,8 +84,38 @@ class DataAccess:
 
         logger.info(f"Returning {entity_count} entities from {page_count} pages")
 
+    def __get_all_entities(self, base_url, path, query_string, key):
+        logger.info(f"Fetching data from url: {path}")
+        request_url = "{0}{1}".format(base_url, path)
+
+        if query_string:
+            request_url = "{0}?{1}".format(request_url, query_string)
+
+        if key is None:
+            key = value_field
+
+        with session_factory.make_session() as s:
+            request_data = s.request("GET", request_url, headers=headers)
+
+        if not request_data.ok:
+            error_text = f"Unexpected response status code: {request_data.status_code} with response text " \
+                f"{request_data.text}"
+            logger.error(error_text)
+            raise AssertionError(error_text)
+
+        result_json = Dotdictify(request_data.json())
+        entities = result_json.get(key)
+        for entity in entities:
+            if entity is not None:
+                yield (entity)
+
+        logger.info(f"Fetched {len(entities)} entities, total: {len(entities)}")
+
     def get_paged_entities(self, base_url, path, query_string, key):
         return self.__get_all_paged_entities(base_url, path, query_string, key)
+
+    def get_all_entities(self, base_url, path, query_string, key):
+        return self.__get_all_entities(base_url, path, query_string, key)
 
 
 data_access_layer = DataAccess()
@@ -137,7 +168,10 @@ def get(path):
     logger.info("Requested url: %s", request_url)
 
     try:
-        entities = data_access_layer.get_paged_entities(url, path, query_string, key)
+        if use_paging:
+            entities = data_access_layer.get_paged_entities(url, path, query_string, key)
+        else:
+            entities = data_access_layer.get_all_entities(url, path, query_string, key)
     except Exception as e:
         logger.warning("Exception occurred when download data from '%s': '%s'", request_url, e)
         raise
