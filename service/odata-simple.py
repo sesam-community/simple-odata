@@ -15,8 +15,8 @@ value_field = os.environ.get("value_field", "value")
 page_size = int(os.environ.get("page_size", 1000))
 page_size_parameter = os.environ.get("page_size_parameter")
 page_parameter = os.environ.get("page_parameter")
-use_page_as_counter = os.environ.get("use_page_as_counter", "false") == "true"
-use_paging = os.environ.get("use_page_as_counter", "true") == "true"
+use_page_as_counter = os.environ.get("use_page_as_counter", "false").lower() == "true"
+use_paging = os.environ.get("use_page_as_counter", "true").lower() == "true"
 headers = ujson.loads('{"Content-Type": "application/json"}')
 starting_offset = int(os.environ.get("debug_starting_offset", 0))
 
@@ -153,6 +153,7 @@ def get(path):
     request_url = "{0}{1}".format(url, path)
     query_string = None
     key = None
+    use_paging_override = use_paging
     if request.query_string:
         query_string = request.query_string.decode("utf-8")
         request_url = "{0}?{1}".format(request_url, query_string)
@@ -164,11 +165,19 @@ def get(path):
                     if query_string != "":
                         query_string += "&"
                     query_string += f"{query_string_key}={request.args[query_string_key]}"
+        if request.args.get("_paging") is not None:
+            use_paging_override = request.args["_paging"].lower() == "true"
+            query_string = ""
+            for query_string_key in request.args:
+                if query_string_key != "_paging":
+                    if query_string != "":
+                        query_string += "&"
+                    query_string += f"{query_string_key}={request.args[query_string_key]}"
 
     logger.info("Requested url: %s", request_url)
 
     try:
-        if use_paging:
+        if use_paging_override:
             entities = data_access_layer.get_paged_entities(url, path, query_string, key)
         else:
             entities = data_access_layer.get_all_entities(url, path, query_string, key)
