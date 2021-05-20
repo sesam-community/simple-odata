@@ -18,9 +18,13 @@ A simple service odata service provider.
 
 `use_page_as_counter` - when set to true, the service will send the number of the page as the value to the page_parameter. When set to false, the service will send the current count of fetched entities to the page_parameter. Default value: false.
 
+`use_paging` - set if paging should be used or not, default value: true.
+
 ### Querystring restricted parameters:
 
 `_key` - can be used to override the value of the 'value_field' parameters. This is useful for services where the entities returned resides in a property that is not constant in the API.
+
+`_paging` - can be used to override the value of the 'use_paging' parameters.
 
 ### Example system config:
 
