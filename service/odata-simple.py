@@ -71,7 +71,9 @@ class DataAccess:
                 for entity in entities:
                     if entity is not None:
                         yield (entity)
-
+            else:
+                entities = []
+                
             entity_count += len(entities)
             page_count += 1
 
@@ -112,6 +114,8 @@ class DataAccess:
             for entity in entities:
                 if entity is not None:
                     yield (entity)
+        else:
+            entities = []
 
         logger.info(f"Fetched {len(entities)} entities, total: {len(entities)}")
 
