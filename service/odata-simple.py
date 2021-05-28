@@ -66,9 +66,11 @@ class DataAccess:
 
             result_json = Dotdictify(request_data.json())
             entities = result_json.get(key)
-            for entity in entities:
-                if entity is not None:
-                    yield (entity)
+
+            if entities is not None:
+                for entity in entities:
+                    if entity is not None:
+                        yield (entity)
 
             entity_count += len(entities)
             page_count += 1
@@ -105,9 +107,11 @@ class DataAccess:
 
         result_json = Dotdictify(request_data.json())
         entities = result_json.get(key)
-        for entity in entities:
-            if entity is not None:
-                yield (entity)
+
+        if entities is not None:
+            for entity in entities:
+                if entity is not None:
+                    yield (entity)
 
         logger.info(f"Fetched {len(entities)} entities, total: {len(entities)}")
 
