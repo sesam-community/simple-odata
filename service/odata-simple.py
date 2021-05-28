@@ -16,7 +16,7 @@ page_size = int(os.environ.get("page_size", 1000))
 page_size_parameter = os.environ.get("page_size_parameter")
 page_parameter = os.environ.get("page_parameter")
 use_page_as_counter = os.environ.get("use_page_as_counter", "false").lower() == "true"
-use_paging = os.environ.get("use_page_as_counter", "true").lower() == "true"
+use_paging = os.environ.get("use_paging", "false").lower() == "true"
 headers = ujson.loads('{"Content-Type": "application/json"}')
 starting_offset = int(os.environ.get("debug_starting_offset", 0))
 
@@ -127,8 +127,8 @@ def get_next_url(base_url, entity_count, query_string, page_count):
             next_count = page_count
 
     if query_string:
-        request_url = "{0}?{1}&{2}={3}&{4}={5}".format(base_url, query_string, page_size_parameter,
-                                                      page_size, page_parameter, next_count)
+        request_url = "{0}?{1}&{2}={3}&{4}={5}".format(base_url, query_string, page_size_parameter, page_size,
+                                                       page_parameter, next_count)
     else:
         request_url = "{0}?{1}={2}&{3}={4}".format(base_url, page_size_parameter, page_size,
                                                    page_parameter, next_count)
@@ -159,20 +159,15 @@ def get(path):
         request_url = "{0}?{1}".format(request_url, query_string)
         if request.args.get("_key") is not None:
             key = request.args["_key"]
-            query_string = ""
-            for query_string_key in request.args:
-                if query_string_key != "_key":
-                    if query_string != "":
-                        query_string += "&"
-                    query_string += f"{query_string_key}={request.args[query_string_key]}"
         if request.args.get("_paging") is not None:
             use_paging_override = request.args["_paging"].lower() == "true"
-            query_string = ""
-            for query_string_key in request.args:
-                if query_string_key != "_paging":
-                    if query_string != "":
-                        query_string += "&"
-                    query_string += f"{query_string_key}={request.args[query_string_key]}"
+
+        query_string = ""
+        for query_string_key in request.args:
+            if query_string_key != "_key" and query_string_key != "_paging":
+                if query_string != "":
+                    query_string += "&"
+                query_string += f"{query_string_key}={request.args[query_string_key]}"
 
     logger.info("Requested url: %s", request_url)
 
