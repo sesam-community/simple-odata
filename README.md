@@ -20,6 +20,8 @@ A simple service odata service provider.
 
 `use_paging` - set if paging should be used or not, default value: false.
 
+`since_property` - set this value to the name of property for the since value if continuation support is enabled for the source.
+
 ### Querystring restricted parameters:
 
 `_key` - can be used to override the value of the 'value_field' parameters. This is useful for services where the entities returned resides in a property that is not constant in the API.
