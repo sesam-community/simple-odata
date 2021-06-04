@@ -17,6 +17,7 @@ page_size_parameter = os.environ.get("page_size_parameter")
 page_parameter = os.environ.get("page_parameter")
 use_page_as_counter = os.environ.get("use_page_as_counter", "false").lower() == "true"
 use_paging = os.environ.get("use_paging", "false").lower() == "true"
+since_property = os.environ.get("since_property")
 headers = ujson.loads('{"Content-Type": "application/json"}')
 starting_offset = int(os.environ.get("debug_starting_offset", 0))
 
@@ -152,6 +153,8 @@ def stream_json(entities):
             yield ','
         else:
             first = False
+        if since_property is not None:
+            row["_updated"] = row[since_property]
         yield ujson.dumps(row)
     yield ']'
 
@@ -159,25 +162,36 @@ def stream_json(entities):
 @app.route("/<path:path>", methods=["GET"])
 def get(path):
     request_url = "{0}{1}".format(url, path)
+    logger.info(f"Requested url: {request_url}")
+
     query_string = None
     key = None
     use_paging_override = use_paging
+    if since_property is not None:
+        use_paging_override = False
+    since = None
+
     if request.query_string:
         query_string = request.query_string.decode("utf-8")
-        request_url = "{0}?{1}".format(request_url, query_string)
+        logger.info(f"Requested querystring: {query_string}")
+
         if request.args.get("_key") is not None:
             key = request.args["_key"]
         if request.args.get("_paging") is not None:
             use_paging_override = request.args["_paging"].lower() == "true"
+        if request.args.get("since") is not None:
+            since = request.args["since"]
 
         query_string = ""
         for query_string_key in request.args:
-            if query_string_key != "_key" and query_string_key != "_paging":
+            if query_string_key != "_key" and query_string_key != "_paging" and query_string_key != "since":
                 if query_string != "":
                     query_string += "&"
                 query_string += f"{query_string_key}={request.args[query_string_key]}"
+        if since is not None:
+            query_string += f"&{since_property}={since}"
 
-    logger.info("Requested url: %s", request_url)
+        logger.info(f"Updated querystring: {query_string}")
 
     try:
         if use_paging_override:
