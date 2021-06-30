@@ -148,14 +148,15 @@ def get_next_url(base_url, entity_count, query_string, page_count):
 def stream_json(entities):
     first = True
     yield '['
-    for i, row in enumerate(entities):
-        if not first:
-            yield ','
-        else:
-            first = False
-        if since_property is not None:
-            row["_updated"] = row[since_property]
-        yield ujson.dumps(row)
+    if entities is not None:
+        for i, row in enumerate(entities):
+            if not first:
+                yield ','
+            else:
+                first = False
+            if since_property is not None:
+                row["_updated"] = row[since_property]
+            yield ujson.dumps(row)
     yield ']'
 
 
