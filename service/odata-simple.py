@@ -110,6 +110,8 @@ class DataAccess:
 
         result_json = Dotdictify(request_data.json())
         entities = result_json.get(key)
+        request_data = None
+        result_json = None
 
         if entities is not None:
             for entity in entities:
