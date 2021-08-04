@@ -66,7 +66,7 @@ class DataAccess:
                 raise AssertionError(error_text)
 
             logger.info(f"Content length: {len(request_data.content)}")
-            entities = ujson.loads(request_data.content).get(key)
+            entities = ujson.loads(request_data.content)
 
             if entities is not None:
                 for entity in entities:
