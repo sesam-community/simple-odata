@@ -108,7 +108,7 @@ class DataAccess:
             raise AssertionError(error_text)
 
         logger.info(f"Content length: {len(request_data.content)}")
-        entities = json_stream.load(request_data.content).get(key)
+        entities = json_stream.load(request_data.content)[key]
 
         if entities is not None:
             for entity in entities:
