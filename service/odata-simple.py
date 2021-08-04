@@ -4,7 +4,6 @@ from flask import Flask, Response, request
 import os
 import logger
 import cherrypy
-from sesamutils import Dotdictify
 
 
 app = Flask(__name__)
@@ -39,7 +38,7 @@ session_factory = BasicUrlSystem({"headers": headers})
 class DataAccess:
 
     def __get_all_paged_entities(self, base_url, path, query_string, key):
-        logger.info(f"Fetching data from paged url: {path}")
+        logger.info(f"Fetching data from url with paging: {path}")
         request_url = "{0}{1}".format(base_url, path)
 
         if query_string:
@@ -65,8 +64,8 @@ class DataAccess:
                 logger.error(error_text)
                 raise AssertionError(error_text)
 
-            result_json = Dotdictify(request_data.json())
-            entities = result_json.get(key)
+            logger.info(f"Content length: {len(request_data.content)}")
+            entities = ujson.loads(request_data.content).get(key)
 
             if entities is not None:
                 for entity in entities:
@@ -108,18 +107,9 @@ class DataAccess:
             logger.error(error_text)
             raise AssertionError(error_text)
 
-        #result_json = Dotdictify(request_data.json())
-        #entities = result_json.get(key)
-
-        logger.info("Got data!")
-        result = request_data.content
-        logger.info(f"Content length: {len(result)}")
-
-        entities = ujson.loads(result).get(key)
-
-        request_data = None
-        # result_json = None
-        logger.info("Clear large objects from memory!")
+        logger.info(f"Content length: {len(request_data.content)}")
+        #entities = ujson.loads(request_data.content).get(key)
+        entities = request_data.json
 
         if entities is not None:
             for entity in entities:
@@ -164,8 +154,8 @@ def stream_json(entities):
                 yield ','
             else:
                 first = False
-            if since_property is not None:
-                row["_updated"] = row[since_property]
+            #if since_property is not None:
+            #    row["_updated"] = row[since_property]
             yield ujson.dumps(row)
     yield ']'
 
