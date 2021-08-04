@@ -90,7 +90,7 @@ class DataAccess:
         logger.info(f"Returning {entity_count} entities from {page_count} pages")
 
     def __get_all_entities(self, base_url, path, query_string, key):
-        logger.info(f"Fetching data from url: {path}")
+        logger.info(f"Fetching data from url without paging: {path}")
         request_url = "{0}{1}".format(base_url, path)
 
         if query_string:
@@ -109,9 +109,11 @@ class DataAccess:
             raise AssertionError(error_text)
 
         logger.info("Read request data and parse as dict!")
-        result_json = Dotdictify(request_data.json())
+        #result_json = Dotdictify(request_data.json())
         logger.info("Extract entities from dict!")
-        entities = result_json.get(key)
+        #entities = result_json.get(key)
+        entities = request_data.json().get(key)
+
         request_data = None
         result_json = None
         logger.info("Clear large objects from memory!")
