@@ -5,6 +5,7 @@ import os
 import logger
 import cherrypy
 import json_stream
+import json_stream.requests
 
 app = Flask(__name__)
 logger = logger.Logger('odata-simple')
@@ -108,7 +109,7 @@ class DataAccess:
             raise AssertionError(error_text)
 
         logger.info(f"Content length: {len(request_data.content)}")
-        entities = json_stream.load(request_data.content)[key]
+        entities = json_stream.requests.load(request_data)[key]
 
         if entities is not None:
             for entity in entities:
