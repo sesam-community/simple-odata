@@ -110,9 +110,9 @@ class DataAccess:
             raise AssertionError(error_text)
 
         logger.info(f"Content length: {len(request_data.content)}")
-        results = json_stream.load(BytesIO(request_data.content))
+        # results = json_stream.load(BytesIO(request_data.content))
         logger.info(f"Only return the values given by the {key} property!")
-        entities = results[key]
+        entities = request_data.json()[key]
 
         if entities is not None:
             for entity in entities:
