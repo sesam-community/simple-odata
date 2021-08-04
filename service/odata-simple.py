@@ -4,7 +4,7 @@ from flask import Flask, Response, request
 import os
 import logger
 import cherrypy
-
+import json_stream
 
 app = Flask(__name__)
 logger = logger.Logger('odata-simple')
@@ -108,7 +108,7 @@ class DataAccess:
             raise AssertionError(error_text)
 
         logger.info(f"Content length: {len(request_data.content)}")
-        entities = ujson.loads(request_data.content).get(key)
+        entities = json_stream.load(request_data.content).get(key)
 
         if entities is not None:
             for entity in entities:
