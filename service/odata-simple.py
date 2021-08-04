@@ -6,6 +6,7 @@ import logger
 import cherrypy
 import json_stream
 import json_stream.requests
+from io import BytesIO
 
 app = Flask(__name__)
 logger = logger.Logger('odata-simple')
@@ -109,7 +110,7 @@ class DataAccess:
             raise AssertionError(error_text)
 
         logger.info(f"Content length: {len(request_data.content)}")
-        results = json_stream.load(str(request_data.content))
+        results = json_stream.load(BytesIO(request_data.content))
         logger.info(f"Only return the values given by the {key} property!")
         entities = results[key]
 
