@@ -112,6 +112,7 @@ class DataAccess:
         entities = result_json.get(key)
         request_data = None
         result_json = None
+        logger.info("Clear large objects from memory!")
 
         if entities is not None:
             for entity in entities:
