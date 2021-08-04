@@ -108,6 +108,7 @@ class DataAccess:
             logger.error(error_text)
             raise AssertionError(error_text)
 
+        logger.info(f"Headers: {request_data.headers}")
         logger.info("Read request data and parse as dict!")
         #result_json = Dotdictify(request_data.json())
         logger.info("Extract entities from dict!")
@@ -115,7 +116,7 @@ class DataAccess:
         entities = request_data.json().get(key)
 
         request_data = None
-        result_json = None
+        # result_json = None
         logger.info("Clear large objects from memory!")
 
         if entities is not None:
