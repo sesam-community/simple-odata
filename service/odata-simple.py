@@ -110,9 +110,9 @@ class DataAccess:
             raise AssertionError(error_text)
 
         logger.info(f"Content length: {len(request_data.content)}")
-        # results = json_stream.load(BytesIO(request_data.content))
+
         logger.info(f"Only return the values given by the {key} property!")
-        entities = request_data.json()[key]
+        entities = request_data.json()
 
         if entities is not None:
             for entity in entities:
@@ -157,8 +157,8 @@ def stream_json(entities):
                 yield ','
             else:
                 first = False
-            if since_property is not None:
-                row["_updated"] = row[since_property]
+            # if since_property is not None:
+            #    row["_updated"] = row[since_property]
             yield ujson.dumps(row)
     yield ']'
 
