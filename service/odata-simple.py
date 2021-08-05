@@ -109,8 +109,8 @@ class DataAccess:
             logger.error(error_text)
             raise AssertionError(error_text)
 
-        #logger.info(f"Content length: {len(request_data.content)}")
-        result = json_stream.requests.load(request_data)
+        logger.info(f"Content length: {len(request_data.content)}")
+        result = ujson.loads(request_data.content)
         logger.info(f"Only return the values given by the {key} property!")
         entities = result[key]
 
@@ -121,7 +121,7 @@ class DataAccess:
         else:
             entities = []
 
-        #logger.info(f"Fetched {len(entities)} entities, total: {len(entities)}")
+        logger.info(f"Fetched {len(entities)} entities, total: {len(entities)}")
 
     def get_paged_entities(self, base_url, path, query_string, key):
         return self.__get_all_paged_entities(base_url, path, query_string, key)
@@ -159,8 +159,7 @@ def stream_json(entities):
                 first = False
             if since_property is not None:
                 row["_updated"] = row[since_property]
-            yield ujson.loads(row)
-            # yield ujson.dumps(row)
+            yield ujson.dumps(row)
     yield ']'
 
 
@@ -207,7 +206,7 @@ def get(path):
         logger.warning("Exception occurred when download data from '%s': '%s'", request_url, e)
         raise
 
-    return Response(entities, mimetype='application/json')
+    return Response(stream_json(entities), mimetype='application/json')
 
 
 if __name__ == '__main__':
