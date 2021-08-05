@@ -4,9 +4,11 @@ from flask import Flask, Response, request
 import os
 import logger
 import cherrypy
-import json_stream
 import json_stream.requests
-from io import BytesIO
+import json_stream
+from json_stream.base import PersistentStreamingJSONList, PersistentStreamingJSONObject, TransientStreamingJSONList
+import json
+from io import StringIO, BytesIO
 
 app = Flask(__name__)
 logger = logger.Logger('odata-simple')
@@ -37,8 +39,43 @@ class BasicUrlSystem:
 session_factory = BasicUrlSystem({"headers": headers})
 
 
-class DataAccess:
+def serialize(o):
+    if type(o) == PersistentStreamingJSONObject:
+        x = 0
+        yield "{"
+        for k, v in o.items():
+            if x > 0:
+                yield ","
+            x += 1
+            yield json.dumps(k)
+            yield ":"
+            yield from serialize(v)
+        yield "}"
+    elif type(o) == PersistentStreamingJSONList:
+        x = 0
+        yield "["
+        for v in o:
+            if x > 0:
+                yield ","
+            x += 1
+            yield json.dumps(v)
+        yield "]"
+    else:
+        yield json.dumps(o)
 
+
+def serialize_object(o):
+    x = 0
+    yield "["
+    for v in o.persistent():
+        if x > 0:
+            yield ","
+        x += 1
+        yield from serialize(v)
+    yield "]"
+
+
+class DataAccess:
     def __get_all_paged_entities(self, base_url, path, query_string, key):
         logger.info(f"Fetching data from url with paging: {path}")
         request_url = "{0}{1}".format(base_url, path)
@@ -110,18 +147,13 @@ class DataAccess:
             raise AssertionError(error_text)
 
         logger.info(f"Content length: {len(request_data.content)}")
-        result = ujson.loads(request_data.content)
+        result_json = json_stream.requests.load(request_data)
         logger.info(f"Only return the values given by the {key} property!")
-        entities = result[key]
+        entities = result_json[key]
 
-        if entities is not None:
-            for entity in entities:
-                if entity is not None:
-                    yield (entity)
-        else:
-            entities = []
+        yield from serialize_object(entities)
 
-        logger.info(f"Fetched {len(entities)} entities, total: {len(entities)}")
+        #logger.info(f"Fetched {len(entities)} entities, total: {len(entities)}")
 
     def get_paged_entities(self, base_url, path, query_string, key):
         return self.__get_all_paged_entities(base_url, path, query_string, key)
@@ -152,14 +184,17 @@ def stream_json(entities):
     first = True
     yield '['
     if entities is not None:
-        for i, row in enumerate(entities):
-            if not first:
-                yield ','
-            else:
-                first = False
-            if since_property is not None:
-                row["_updated"] = row[since_property]
-            yield ujson.dumps(row)
+        try:
+            for i, row in enumerate(entities):
+                if not first:
+                    yield ','
+                else:
+                    first = False
+                if since_property is not None:
+                    row["_updated"] = row[since_property]
+                yield ujson.dumps(row)
+        except StopIteration:
+            return
     yield ']'
 
 
