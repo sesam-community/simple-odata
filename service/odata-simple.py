@@ -101,7 +101,7 @@ class DataAccess:
             key = value_field
 
         with session_factory.make_session() as s:
-            request_data = s.request("GET", request_url, headers=headers)
+            request_data = s.request("GET", request_url, headers=headers, stream=True)
 
         if not request_data.ok:
             error_text = f"Unexpected response status code: {request_data.status_code} with response text " \
@@ -109,8 +109,8 @@ class DataAccess:
             logger.error(error_text)
             raise AssertionError(error_text)
 
-        logger.info(f"Content length: {len(request_data.content)}")
-        result = request_data.json()
+        #logger.info(f"Content length: {len(request_data.content)}")
+        result = json_stream.requests.load(request_data)
         logger.info(f"Only return the values given by the {key} property!")
         entities = result[key]
 
@@ -121,7 +121,7 @@ class DataAccess:
         else:
             entities = []
 
-        logger.info(f"Fetched {len(entities)} entities, total: {len(entities)}")
+        #logger.info(f"Fetched {len(entities)} entities, total: {len(entities)}")
 
     def get_paged_entities(self, base_url, path, query_string, key):
         return self.__get_all_paged_entities(base_url, path, query_string, key)
