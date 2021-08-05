@@ -159,7 +159,7 @@ def stream_json(entities):
                 first = False
             if since_property is not None:
                 row["_updated"] = row[since_property]
-            yield row
+            yield ujson.loads(row)
             # yield ujson.dumps(row)
     yield ']'
 
@@ -207,7 +207,7 @@ def get(path):
         logger.warning("Exception occurred when download data from '%s': '%s'", request_url, e)
         raise
 
-    return Response(stream_json(entities), mimetype='application/json')
+    return Response(entities, mimetype='application/json')
 
 
 if __name__ == '__main__':
