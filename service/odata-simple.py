@@ -159,7 +159,8 @@ def stream_json(entities):
                 first = False
             if since_property is not None:
                 row["_updated"] = row[since_property]
-            yield ujson.dumps(row)
+            yield row
+            # yield ujson.dumps(row)
     yield ']'
 
 
