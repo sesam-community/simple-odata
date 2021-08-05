@@ -238,7 +238,7 @@ def get(path):
         logger.warning("Exception occurred when download data from '%s': '%s'", request_url, e)
         raise
 
-    return Response(stream_json(entities), mimetype='application/json')
+    return Response(entities, mimetype='application/json')
 
 
 if __name__ == '__main__':
