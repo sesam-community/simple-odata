@@ -103,8 +103,8 @@ class DataAccess:
                 logger.error(error_text)
                 raise AssertionError(error_text)
 
-            logger.info(f"Content length: {len(request_data.content)}")
-            entities = ujson.loads(request_data.content).get(key)
+            logger.info(f"Response from server returned {len(request_data.content)} bytes.")
+            entities = request_data.json()[key]
 
             if entities is not None:
                 for entity in entities:
@@ -146,14 +146,11 @@ class DataAccess:
             logger.error(error_text)
             raise AssertionError(error_text)
 
-        logger.info(f"Content length: {len(request_data.content)}")
+        logger.info(f"Response from server returned {len(request_data.content)} bytes.")
         result_json = json_stream.requests.load(request_data)
-        logger.info(f"Only return the values given by the {key} property!")
         entities = result_json[key]
 
         yield from serialize_object(entities)
-
-        #logger.info(f"Fetched {len(entities)} entities, total: {len(entities)}")
 
     def get_paged_entities(self, base_url, path, query_string, key):
         return self.__get_all_paged_entities(base_url, path, query_string, key)
@@ -238,7 +235,10 @@ def get(path):
         logger.warning("Exception occurred when download data from '%s': '%s'", request_url, e)
         raise
 
-    return Response(entities, mimetype='application/json')
+    if use_paging_override:
+        return Response(stream_json(entities), mimetype='application/json')
+    else:
+        return Response(entities, mimetype='application/json')
 
 
 if __name__ == '__main__':
