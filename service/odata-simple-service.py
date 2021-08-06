@@ -118,7 +118,7 @@ class DataAccess:
                         yield (entity)
             else:
                 entities = []
-                
+
             entity_count += len(entities)
             page_count += 1
 
@@ -171,7 +171,7 @@ data_access_layer = DataAccess()
 def get_next_url(base_url, entity_count, query_string, page_count):
     next_count = entity_count
     if use_page_as_counter:
-            next_count = page_count
+        next_count = page_count
 
     if query_string:
         request_url = "{0}?{1}&{2}={3}&{4}={5}".format(base_url, query_string, page_size_parameter, page_size,
