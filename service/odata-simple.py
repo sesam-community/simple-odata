@@ -153,9 +153,7 @@ class DataAccess:
             raise AssertionError(error_text)
 
         logger.info(f"Response from server returned {len(request_data.content)} bytes.")
-        #result_json = json_stream.requests.load(request_data)
-        test = StringIO('{"@odata.context":"https://h1-a-ifs10utv2.statnett.no:48080/int/ifsapplications/projection/v1/ProjectsHandling.svc/$metadata#Projects","value":[{"@odata.etag":"WVy8iQUFBV0k4QUFBQUFEUHJyQUFBOjIwMjEwMzE4MTUwMTM3Ig==","luname":"Project","keyref":"PROJECT_ID=23518^","Objstate":"Started","Objgrants":null,"ProjectId":"23518","Name":"DDOE EDIEL Danmark","Description":"IKT-timer og -konsulenter relatert til Ediel-oppgaver. Andel Danmark","PlanStart":null,"PlanFinish":null,"ActualStart":"2011-01-14","ActualFinish":null,"FrozenDate":null,"CloseDate":null,"CancelDate":null,"ApprovedDate":"2009-11-09","Manager":"IFS8MIG","CustomerId":"50298","CustomerResponsible":null,"CustomerProjectId":null,"Company":"10","CalendarId":"*","ProgramId":null,"PlannedRevenue":null,"PlannedCost":null,"CurrencyType":"1","ProbabilityToWin":1,"DefaultCharTemp":null,"AccessOnOff":true,"DateCreated":"2009-11-09","CreatedBy":"GROB","DateModified":"2021-03-18","ModifiedBy":"IFSAPP","BaselineRevisionNumber":null}]}')
-        result_json = json_stream.load(test)
+        result_json = json_stream.requests.load(request_data)
         entities = result_json[key]
 
         yield from serialize_object(entities)
