@@ -8,7 +8,6 @@ import json_stream.requests
 import json_stream
 from json_stream.base import PersistentStreamingJSONList, PersistentStreamingJSONObject, TransientStreamingJSONList
 import json
-from io import StringIO, BytesIO
 
 app = Flask(__name__)
 logger = logger.Logger('odata-simple')
@@ -23,6 +22,8 @@ use_paging = os.environ.get("use_paging", "false").lower() == "true"
 since_property = os.environ.get("since_property")
 headers = ujson.loads('{"Content-Type": "application/json"}')
 starting_offset = int(os.environ.get("debug_starting_offset", 0))
+username = os.environ.get("username")
+pw = os.environ.get("password")
 
 
 class BasicUrlSystem:
@@ -82,7 +83,7 @@ def serialize_object(o):
 
 
 class DataAccess:
-    def __get_all_paged_entities(self, base_url, path, query_string, key):
+    def __get_all_paged_entities(self, base_url, path, query_string, key, auth_info):
         logger.info(f"Fetching data from url with paging: {path}")
         request_url = "{0}{1}".format(base_url, path)
 
@@ -101,7 +102,7 @@ class DataAccess:
             logger.info(f"Fetching data from url: {next_page}")
 
             with session_factory.make_session() as s:
-                request_data = s.request("GET", next_page, headers=headers)
+                request_data = s.request("GET", next_page, auth=auth_info, headers=headers)
 
             if not request_data.ok:
                 error_text = f"Unexpected response status code: {request_data.status_code} with response text " \
@@ -133,7 +134,7 @@ class DataAccess:
 
         logger.info(f"Returning {entity_count} entities from {page_count} pages")
 
-    def __get_all_entities(self, base_url, path, query_string, key):
+    def __get_all_entities(self, base_url, path, query_string, key, auth_info):
         logger.info(f"Fetching data from url without paging: {path}")
         request_url = "{0}{1}".format(base_url, path)
 
@@ -144,7 +145,7 @@ class DataAccess:
             key = value_field
 
         with session_factory.make_session() as s:
-            request_data = s.request("GET", request_url, headers=headers, stream=True)
+            request_data = s.request("GET", request_url, auth=auth_info, headers=headers, stream=True)
 
         if not request_data.ok:
             error_text = f"Unexpected response status code: {request_data.status_code} with response text " \
@@ -209,6 +210,9 @@ def get(path):
     if since_property is not None:
         use_paging_override = False
     since = None
+    auth_info = None
+    if username is not None:
+        auth_info = (username, pw)
 
     if request.query_string:
         query_string = request.query_string.decode("utf-8")
@@ -234,9 +238,9 @@ def get(path):
 
     try:
         if use_paging_override:
-            entities = data_access_layer.get_paged_entities(url, path, query_string, key)
+            entities = data_access_layer.get_paged_entities(url, path, query_string, key, auth_info)
         else:
-            entities = data_access_layer.get_all_entities(url, path, query_string, key)
+            entities = data_access_layer.get_all_entities(url, path, query_string, key, auth_info)
     except Exception as e:
         logger.warning("Exception occurred when download data from '%s': '%s'", request_url, e)
         raise
