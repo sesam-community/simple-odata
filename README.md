@@ -22,6 +22,10 @@ A simple service odata service provider.
 
 `since_property` - set this value to the name of property for the since value if continuation support is enabled for the source.
 
+`username` - username to the API service.
+
+`password` - password to the API service.
+
 ### Querystring restricted parameters:
 
 `_key` - can be used to override the value of the 'value_field' parameters. This is useful for services where the entities returned resides in a property that is not constant in the API.
