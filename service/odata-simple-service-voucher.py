@@ -51,7 +51,7 @@ if __name__ == '__main__':
         'environment': 'production',
         'engine.autoreload_on': False,
         'log.screen': True,
-        'server.socket_port': 8080,
+        'server.socket_port': 5002,
         'server.socket_host': '0.0.0.0'
     })
 
