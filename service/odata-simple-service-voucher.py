@@ -3,7 +3,7 @@
 #curl -o output.json -N -v -H "Content-Type: application/json" -H "Connection: Keep-Alive" -H "accept-encoding: gzip, deflate" -H "Expect: 100-continue" http://127.0.0.2:8080/ -u "SUTHOMASDIT:<pass>"
 
 #for browser
-#export headers_parameter='{"Content-Type":"application/json","Authorization":"Basic U1VUSE9NQVNESVQ6RXZlNGV2ZXIhIQ=="}'
+#export headers_parameter='{"Content-Type":"application/json","Authorization":"Basic <base64>"}'
 
 import logger
 import os
